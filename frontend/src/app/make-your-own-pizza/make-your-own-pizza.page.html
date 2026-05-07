@@ -1,0 +1,86 @@
+<ion-content [fullscreen]="true" class="builder-content">
+  <div class="builder-shell">
+    <header class="builder-header">
+      <button type="button" class="menu-link" (click)="backToMenu()">Back to Menu</button>
+      <h1>Make Your Own Pizza</h1>
+      <p>Choose your size, crust, sauce, and toppings to build your perfect wood-fired pizza.</p>
+    </header>
+
+    <section class="builder-layout">
+      <article class="builder-panel">
+        <h2>1. Select Size</h2>
+        <div class="choice-grid">
+          <button
+            type="button"
+            *ngFor="let option of sizes"
+            class="choice-chip"
+            [class.active]="selectedSize === option.size"
+            (click)="selectedSize = option.size">
+            <span>{{ option.label }}</span>
+            <strong>{{ formatPrice(option.price) }}</strong>
+          </button>
+        </div>
+      </article>
+
+      <article class="builder-panel">
+        <h2>2. Choose Crust</h2>
+        <div class="choice-grid">
+          <button
+            type="button"
+            *ngFor="let option of crusts"
+            class="choice-chip"
+            [class.active]="selectedCrustId === option.id"
+            (click)="selectedCrustId = option.id">
+            <span>{{ option.label }}</span>
+            <strong>{{ option.price === 0 ? 'Included' : '+' + formatPrice(option.price) }}</strong>
+          </button>
+        </div>
+      </article>
+
+      <article class="builder-panel">
+        <h2>3. Pick Sauce</h2>
+        <div class="choice-grid">
+          <button
+            type="button"
+            *ngFor="let option of sauces"
+            class="choice-chip"
+            [class.active]="selectedSauceId === option.id"
+            (click)="selectedSauceId = option.id">
+            <span>{{ option.label }}</span>
+            <strong>{{ option.price === 0 ? 'Included' : '+' + formatPrice(option.price) }}</strong>
+          </button>
+        </div>
+      </article>
+
+      <article class="builder-panel">
+        <h2>4. Add Toppings</h2>
+        <div class="choice-grid">
+          <button
+            type="button"
+            *ngFor="let topping of toppings"
+            class="choice-chip"
+            [class.active]="isToppingSelected(topping.id)"
+            (click)="toggleTopping(topping.id)">
+            <span>{{ topping.label }}</span>
+            <strong>+{{ formatPrice(topping.price) }}</strong>
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <aside class="builder-summary">
+      <h3>Your Pizza</h3>
+      <p><strong>Size:</strong> {{ selectedSize }}</p>
+      <p><strong>Crust:</strong> {{ selectedCrust.label }}</p>
+      <p><strong>Sauce:</strong> {{ selectedSauce.label }}</p>
+      <p><strong>Toppings:</strong> {{ selectedToppingLabels.length ? selectedToppingLabels.join(', ') : 'None selected' }}</p>
+      <div class="summary-total">
+        <span>Total</span>
+        <strong>{{ formatPrice(totalPrice) }}</strong>
+      </div>
+      <ion-button expand="block" class="back-button" (click)="addToCartAndBack()">
+        Add to Cart & Go to Menu
+      </ion-button>
+    </aside>
+  </div>
+</ion-content>

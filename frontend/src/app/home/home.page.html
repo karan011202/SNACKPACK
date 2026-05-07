@@ -1,0 +1,321 @@
+<ion-content [fullscreen]="true" class="home-content">
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="SnackPack Woodfire Pizza brand">
+        <img class="brand-logo" src="assets/branding/snackpack-logo.png?v=2" alt="SnackPack Woodfire Pizza logo" />
+        <span>SNACKPACK WOODFIRE PIZZA</span>
+      </div>
+
+      <nav class="topnav" aria-label="Main navigation">
+        <a class="topnav-link active" routerLink="/home">Menu</a>
+        <a class="topnav-link" href="#">Locations</a>
+        <a class="topnav-link" href="#">About Us</a>
+      </nav>
+
+      <div class="topbar-actions">
+        <div class="user-menu" *ngIf="currentUser">
+          <button
+            type="button"
+            class="user-menu-trigger"
+            (click)="toggleUserMenu($event)"
+            aria-label="Open user menu"
+            [attr.aria-expanded]="isUserMenuOpen">
+            <span class="user-icon">&#128100;</span>
+            <span class="user-name">{{ currentUser.name }}</span>
+            <span class="user-initials">{{ userInitials }}</span>
+          </button>
+
+          <div class="user-menu-dropdown" *ngIf="isUserMenuOpen" role="menu" aria-label="User options">
+            <button type="button" class="user-dropdown-item" (click)="openUserSection('order-history')">
+              Order History
+            </button>
+            <button type="button" class="user-dropdown-item" (click)="openUserSection('saved-payments')">
+              Saved Payments
+            </button>
+            <button type="button" class="user-dropdown-item" (click)="openUserSection('loyalty-points')">
+              Loyalty Points Earned
+            </button>
+            <button type="button" class="user-dropdown-item danger" (click)="logout()">
+              Logout
+            </button>
+          </div>
+        </div>
+
+        <ion-button *ngIf="!currentUser" class="login-button" (click)="goToLogin()">
+          Login
+        </ion-button>
+
+        <ion-button class="cart-button" (click)="isCartOpen = !isCartOpen">
+          <span class="cart-icon">🛒</span>
+          Cart
+          <span class="cart-count">{{ cart.length }}</span>
+        </ion-button>
+      </div>
+    </header>
+
+    <section class="layout" [class.veg-active]="menuSection === 'veg'" [class.non-veg-active]="menuSection === 'nonVeg'" [class.other-active]="menuSection === 'other'" [class.combos-active]="menuSection === 'combos'">
+      <aside class="sidebar">
+        <p class="sidebar-kicker">Our Menu</p>
+        <p class="sidebar-subtitle">Fresh from the wood-fired oven</p>
+
+        <div class="section-switch" role="group" aria-label="Menu section switch">
+          <button
+            type="button"
+            class="section-switch-btn veg-btn"
+            [class.active]="menuSection === 'veg'"
+            (click)="switchMenuSection('veg')">
+            <span class="switch-pill">VEG</span>
+            Veg Pizza
+          </button>
+          <button
+            type="button"
+            class="section-switch-btn nonveg-btn"
+            [class.active]="menuSection === 'nonVeg'"
+            (click)="switchMenuSection('nonVeg')">
+            <span class="switch-pill">NON-VEG</span>
+            Non-Veg Pizza
+          </button>
+          <button
+            type="button"
+            class="section-switch-btn other-btn"
+            [class.active]="menuSection === 'other'"
+            (click)="switchMenuSection('other')">
+            <span class="switch-pill">MORE</span>
+            Other Items
+          </button>
+          <button
+            type="button"
+            class="section-switch-btn combos-btn"
+            [class.active]="menuSection === 'combos'"
+            (click)="switchMenuSection('combos')">
+            <span class="switch-pill">COMBO</span>
+            Combos
+          </button>
+        </div>
+
+        <div class="category-list">
+          <button
+            *ngFor="let category of currentCategories"
+            type="button"
+            class="category-item"
+            [class.active]="isCategoryActive(category)"
+            (click)="selectCategory(category)">
+            <span class="category-icon">•</span>
+            <span>
+              <strong>{{ category.label }}</strong>
+              <small>{{ category.helper }}</small>
+            </span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="menu-area">
+        <div class="menu-intro">
+          <h1>{{ sectionTitle }}</h1>
+          <p class="section-note" [class.nonveg]="menuSection === 'nonVeg'" [class.other]="menuSection === 'other'" [class.combos]="menuSection === 'combos'">
+            {{ sectionNote }}
+          </p>
+          <p>Each pizza is crafted with fresh dough, hand-stretched and fired at 400°C for that thin crust char.</p>
+          
+        </div>
+
+        <div class="menu-grid" *ngIf="menuSection === 'veg' || menuSection === 'nonVeg'">
+          <article class="menu-card" *ngFor="let pizza of filteredItems">
+            <div class="menu-image-wrap">
+              <span class="menu-badge">{{ pizza.badge }}</span>
+              <img [src]="pizza.image" [alt]="pizza.name" />
+            </div>
+
+            <div class="menu-body">
+              <div class="menu-title-row">
+                <h2>{{ pizza.name }}</h2>
+                <span class="menu-price">{{ formatPrice(getMenuDisplayPrice(pizza)) }}</span>
+              </div>
+
+              <div class="size-selector" role="group" aria-label="Select pizza size">
+                <button 
+                  type="button"
+                  class="size-chip"
+                  [class.active]="getSelectedSize(pizza.id) === 'Regular'"
+                  (click)="selectSize(pizza.id, 'Regular')">
+                  R {{ formatPrice(pizza.regularPrice) }}
+                </button>
+                <button
+                  type="button"
+                  class="size-chip"
+                  [class.active]="getSelectedSize(pizza.id) === 'Medium'"
+                  (click)="selectSize(pizza.id, 'Medium')">
+                  M {{ formatPrice(pizza.mediumPrice) }}
+                </button>
+              </div>
+              <div class="addon-selector" *ngIf="availableAddons.length > 0">
+                <p class="addon-label">Add-ons:</p>
+                <div class="addon-options">
+                  <label *ngFor="let addon of availableAddons" class="addon-checkbox">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isAddonSelected(pizza.id, addon.id)"
+                      (change)="toggleAddon(pizza.id, addon.id)" />
+                    <span>{{ addon.name }} +{{ formatPrice(getAddonDisplayPrice(addon, pizza.id)) }}</span>
+                  </label>
+
+                  <ng-container *ngFor="let addon of availableAddons">
+                    <div
+                      *ngIf="hasAddonChoices(addon.id) && isAddonSelected(pizza.id, addon.id)"
+                      class="addon-suboptions">
+                      <p class="addon-suboptions-title">Choose {{ addon.name }} options:</p>
+                      <label
+                        *ngFor="let choice of getAddonChoices(addon.id)"
+                        class="addon-suboption-checkbox">
+                        <input
+                          type="checkbox"
+                          [checked]="isAddonChoiceSelected(pizza.id, addon.id, choice)"
+                          (change)="toggleAddonChoice(pizza.id, addon.id, choice)" />
+                        <span>{{ choice }}</span>
+                      </label>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+              <p class="menu-description">{{ pizza.description }}</p>
+
+              <div class="menu-tags">
+                <span *ngFor="let tag of pizza.tags">{{ tag }}</span>
+              </div>
+
+              <div class="menu-actions">
+                <ion-button
+                  class="add-button"
+                  [class.click-pop]="isAddAnimating(getPizzaAddButtonKey(pizza.id))"
+                  (click)="handlePizzaButtonClick(pizza)">
+                  <span *ngIf="getPizzaAddedCount(pizza.id) === 0 && !isAddTickVisible(getPizzaAddButtonKey(pizza.id))">Add to Cart</span>
+                  <span *ngIf="getPizzaAddedCount(pizza.id) === 0 && isAddTickVisible(getPizzaAddButtonKey(pizza.id))" class="added-tick">✔</span>
+
+                  <span *ngIf="getPizzaAddedCount(pizza.id) > 0" class="inline-counter" aria-label="Item quantity controls">
+                    <button type="button" class="inline-counter-btn" (click)="decrementPizzaFromButton(pizza, $event)">−</button>
+                    <span class="inline-counter-value">{{ getPizzaAddedCount(pizza.id) }}</span>
+                    <button type="button" class="inline-counter-btn" (click)="incrementPizzaFromButton(pizza, $event)">+</button>
+                  </span>
+                </ion-button>
+                <button type="button" class="secondary-icon" aria-label="More options">⋯</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="other-grid" *ngIf="menuSection === 'other'">
+          <article class="other-card" *ngFor="let item of filteredOtherItems">
+            <div class="other-card-top">
+              <h2>{{ item.name }}</h2>
+              <span class="other-category">{{ getOtherCategoryLabel(item.category) }}</span>
+            </div>
+
+            <p class="other-description" *ngIf="item.description">{{ item.description }}</p>
+
+            <div class="other-prices">
+              <span *ngFor="let line of getOtherItemPriceLines(item)">{{ line }}</span>
+            </div>
+
+            <div class="other-options" *ngIf="getOtherItemOptions(item).length > 1">
+              <button
+                type="button"
+                class="other-option-chip"
+                *ngFor="let option of getOtherItemOptions(item)"
+                [class.active]="getSelectedOtherOption(item).label === option.label"
+                (click)="selectOtherOption(item.id, option.label)">
+                {{ option.label }} {{ formatPrice(option.price) }}
+              </button>
+            </div>
+
+            <ion-button
+              class="other-add-button"
+              expand="block"
+              [class.click-pop]="isAddAnimating(getOtherAddButtonKey(item.id))"
+              (click)="handleOtherButtonClick(item)">
+              <span *ngIf="getOtherAddedCount(item.id) === 0 && !isAddTickVisible(getOtherAddButtonKey(item.id))">Add to Cart</span>
+              <span *ngIf="getOtherAddedCount(item.id) === 0 && isAddTickVisible(getOtherAddButtonKey(item.id))" class="added-tick">✔</span>
+
+              <span *ngIf="getOtherAddedCount(item.id) > 0" class="inline-counter" aria-label="Item quantity controls">
+                <button type="button" class="inline-counter-btn" (click)="decrementOtherFromButton(item, $event)">−</button>
+                <span class="inline-counter-value">{{ getOtherAddedCount(item.id) }}</span>
+                <button type="button" class="inline-counter-btn" (click)="incrementOtherFromButton(item, $event)">+</button>
+              </span>
+            </ion-button>
+          </article>
+        </div>
+
+        <div class="other-grid" *ngIf="menuSection === 'combos'">
+          <article class="other-card" *ngFor="let item of filteredCombosItems">
+            <div class="other-card-top">
+              <h2>{{ item.name }}</h2>
+              <span class="other-category">Combo</span>
+            </div>
+
+            <p class="other-description" *ngIf="item.description">{{ item.description }}</p>
+
+            <div class="other-prices">
+              <span *ngFor="let line of getOtherItemPriceLines(item)">{{ line }}</span>
+            </div>
+
+            <ion-button
+              class="other-add-button"
+              expand="block"
+              [class.click-pop]="isAddAnimating(getOtherAddButtonKey(item.id))"
+              (click)="handleOtherButtonClick(item)">
+              <span *ngIf="getOtherAddedCount(item.id) === 0 && !isAddTickVisible(getOtherAddButtonKey(item.id))">Add to Cart</span>
+              <span *ngIf="getOtherAddedCount(item.id) === 0 && isAddTickVisible(getOtherAddButtonKey(item.id))" class="added-tick">✔</span>
+
+              <span *ngIf="getOtherAddedCount(item.id) > 0" class="inline-counter" aria-label="Item quantity controls">
+                <button type="button" class="inline-counter-btn" (click)="decrementOtherFromButton(item, $event)">−</button>
+                <span class="inline-counter-value">{{ getOtherAddedCount(item.id) }}</span>
+                <button type="button" class="inline-counter-btn" (click)="incrementOtherFromButton(item, $event)">+</button>
+              </span>
+            </ion-button>
+          </article>
+        </div>
+      </main>
+
+      <aside class="summary-panel" *ngIf="isCartOpen">
+        <div class="summary-header">
+          <h3>Order Summary</h3>
+          <span class="summary-count">{{ cart.length }}</span>
+        </div>
+
+        <div class="summary-items">
+          <article class="summary-item" *ngFor="let item of cart">
+            <div class="summary-copy">
+              <h4>{{ item.name }}</h4>
+              <p>Option: {{ item.selectedVariant }}</p>
+              <p *ngIf="item.selectedAddons && item.selectedAddons.length > 0" class="summary-addons">
+                Add-ons: <span *ngFor="let addonId of item.selectedAddons; let last = last">
+                  {{ addonId }}<span *ngIf="!last">, </span>
+                </span>
+              </p>
+              <strong>{{ formatPrice(item.unitPrice) }}</strong>
+            </div>
+
+            <div class="summary-controls">
+              <button type="button" (click)="updateQuantity(item.itemKey, -1)">−</button>
+              <span>{{ item.quantity }}</span>
+              <button type="button" (click)="updateQuantity(item.itemKey, 1)">+</button>
+            </div>
+          </article>
+        </div>
+
+        <div class="summary-totals">
+          <div>
+            <span>Subtotal</span>
+            <strong>{{ formatPrice(getSubtotal()) }}</strong>
+          </div>
+          <div class="total-row">
+            <span>Total</span>
+            <strong>{{ formatPrice(getTotal()) }}</strong>
+          </div>
+        </div>
+        <ion-button expand="block" class="checkout-button" [disabled]="cart.length === 0" (click)="goToCheckout()">
+          Checkout Now
+        </ion-button>
+      </aside>
+    </section>
+  </div>
+</ion-content>

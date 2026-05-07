@@ -1,0 +1,14 @@
+-- -- Create OTPs table
+-- CREATE TABLE IF NOT EXISTS public.otps (
+--   id VARCHAR(255) PRIMARY KEY,
+--   phone VARCHAR(15) NOT NULL,
+--   otp_code VARCHAR(6) NOT NULL,
+--   attempts INTEGER NOT NULL DEFAULT 0,
+--   is_verified BOOLEAN NOT NULL DEFAULT false,
+--   created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+--   expires_at TIMESTAMP WITHOUT TIME ZONE NOT NULL
+-- );
+
+-- -- Create index on phone for faster lookups
+-- CREATE INDEX IF NOT EXISTS idx_otps_phone ON public.otps(phone);
+-- CREATE INDEX IF NOT EXISTS idx_otps_expires_at ON public.otps(expires_at);

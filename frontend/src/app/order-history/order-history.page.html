@@ -1,0 +1,32 @@
+<ion-content [fullscreen]="true" class="account-content">
+  <div class="account-shell">
+    <header class="account-header">
+      <div>
+        <p class="kicker">SnackPack Account</p>
+        <h1>Order History</h1>
+      </div>
+      <ion-button fill="outline" (click)="goBack()">Back to Menu</ion-button>
+    </header>
+
+    <section class="history-list" *ngIf="orders.length > 0; else historyEmptyState">
+      <article class="history-card" *ngFor="let order of orders" role="button" tabindex="0" (click)="openOrder(order)" (keyup.enter)="openOrder(order)">
+        <div class="history-top">
+          <strong>{{ order.id }}</strong>
+          <span class="status" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
+        </div>
+        <p class="date">{{ order.date }}</p>
+        <p class="items">{{ order.items.join(' • ') }}</p>
+        <p class="total">Total: {{ formatPrice(order.total) }}</p>
+      </article>
+    </section>
+
+    <ng-template #historyEmptyState>
+      <section class="empty-state">
+        <h2 *ngIf="!hasSession">Login to view your order history</h2>
+        <h2 *ngIf="hasSession">No orders yet</h2>
+        <p *ngIf="!hasSession">Place an order after logging in and it will appear here.</p>
+        <p *ngIf="hasSession">Your newly placed orders will show up here automatically.</p>
+      </section>
+    </ng-template>
+  </div>
+</ion-content>

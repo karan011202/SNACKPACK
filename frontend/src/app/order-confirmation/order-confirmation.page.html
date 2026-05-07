@@ -1,0 +1,86 @@
+<ion-content [fullscreen]="true" class="confirmation-content">
+  <div class="confirmation-shell" *ngIf="order; else notFoundState">
+    <header class="confirmation-header">
+      <ion-button fill="clear" class="history-button" (click)="goBackToHistory()">Back to History</ion-button>
+    </header>
+
+    <div class="confirmation-container">
+      <div class="success-icon">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" fill="#f5ede4" stroke="#c1440a" stroke-width="2" />
+          <path d="M20 32L28 40L44 24" stroke="#c1440a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <h1 class="thank-you-heading">Order Status</h1>
+      <p class="order-number">{{ orderDisplayId }}</p>
+      <div class="table-badge">{{ order.tableNumber || 'TABLE14' }}</div>
+
+      <p class="current-status" [class.cancelled]="progressStatus === 'Cancelled'">{{ progressStatus }}</p>
+
+      <div class="status-timeline">
+        <ng-container *ngFor="let step of timelineSteps; let i = index">
+          <div class="timeline-item" [class.active]="isStepActive(step)">
+            <div class="timeline-dot">
+              <svg *ngIf="step.icon === 'check'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#c1440a" />
+              </svg>
+              <svg *ngIf="step.icon === 'clock'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="8" stroke="#999" stroke-width="2" />
+                <path d="M12 6v6l4 2" stroke="#999" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <svg *ngIf="step.icon === 'table'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M7 7v10m10-10v10M4 17h16" stroke="#999" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <svg *ngIf="step.icon === 'done'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#999" />
+              </svg>
+            </div>
+            <span class="timeline-label">{{ step.label }}</span>
+          </div>
+          <div class="timeline-connector" *ngIf="i < timelineSteps.length - 1"></div>
+        </ng-container>
+      </div>
+
+      <div class="estimated-time">
+        <p class="time-label">Estimated table serving time</p>
+        <p class="time-value">{{ order.estimatedTime || '12-15 minutes' }}</p>
+      </div>
+
+      <div class="confirmation-summary">
+        <h2>Order Summary</h2>
+        <div class="summary-items">
+          <div class="summary-item" *ngFor="let item of order.lineItems">
+            <img [src]="item.image" [alt]="item.name" class="item-image" />
+            <div class="item-details">
+              <div class="item-name-price">
+                <h3>{{ item.quantity }}x {{ item.name }}</h3>
+                <span class="item-price">{{ formatPrice(item.unitPrice * item.quantity) }}</span>
+              </div>
+              <p class="item-variant" *ngIf="item.variant">{{ item.variant }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="confirmation-total">
+          <span>Total</span>
+          <strong>{{ formatPrice(order.total) }}</strong>
+        </div>
+      </div>
+
+      <ion-button expand="block" fill="outline" class="return-button" (click)="goBackToMenu()">
+        Return to Menu
+      </ion-button>
+    </div>
+  </div>
+
+  <ng-template #notFoundState>
+    <div class="not-found-shell">
+      <h1>Order not found</h1>
+      <p>This order does not belong to the current logged in user, or it is unavailable.</p>
+      <ion-button fill="outline" (click)="goBackToHistory()">Back to Order History</ion-button>
+    </div>
+  </ng-template>
+</ion-content>

@@ -1,0 +1,35 @@
+<ion-content [fullscreen]="true" class="account-content">
+  <div class="account-shell">
+    <header class="account-header">
+      <div>
+        <p class="kicker">SnackPack Account</p>
+        <h1>Loyalty Points</h1>
+      </div>
+      <ion-button fill="outline" (click)="goBack()">Back to Menu</ion-button>
+    </header>
+
+    <section class="points-card">
+      <p class="label">Points Wallet Balance</p>
+      <h2>{{ totalPoints }}</h2>
+      <p class="sub">Redeemable value: {{ totalPoints }} rupees</p>
+      <p class="sub">Lifetime earned: {{ totalEarnedPoints }} pts | Lifetime redeemed: {{ totalRedeemedPoints }} pts</p>
+      <div class="progress-track" aria-label="Loyalty progress">
+        <div class="progress-fill" [style.width.%]="progressPercent"></div>
+      </div>
+      <p class="reward-note" *ngIf="hasSession">{{ nextRewardAt - totalPoints > 0 ? (nextRewardAt - totalPoints) : 0 }} points left for your next 500-point milestone.</p>
+      <p class="reward-note" *ngIf="!hasSession">Login to build and redeem your loyalty wallet.</p>
+    </section>
+
+    <section class="events">
+      <h3>Recent Activity</h3>
+      <p class="empty-copy" *ngIf="recentEvents.length === 0">No loyalty activity yet.</p>
+      <article class="event-card" *ngFor="let event of recentEvents">
+        <div>
+          <strong>{{ event.title }}</strong>
+          <p>{{ event.date }}</p>
+        </div>
+        <span [class.negative]="event.pointsDelta < 0">{{ formatPoints(event.pointsDelta) }}</span>
+      </article>
+    </section>
+  </div>
+</ion-content>

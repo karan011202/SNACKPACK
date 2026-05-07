@@ -1,0 +1,144 @@
+<ion-content [fullscreen]="true" class="login-content">
+  <div class="login-bg"></div>
+
+  <main class="login-shell">
+    <section class="login-card">
+      <header class="brand-header">
+        <div class="brand-mark" aria-hidden="true">SP</div>
+        <div class="brand-copy">
+          <p class="brand-kicker">SnackPack</p>
+          <h1>Woodfire Pizza Login</h1>
+          <p class="brand-subtitle">Fresh dough. Live flame. Fast checkout.</p>
+        </div>
+      </header>
+
+      <!-- Error and Success Messages -->
+      <div *ngIf="errorMessage" class="message error-message">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="message success-message">
+        {{ successMessage }}
+      </div>
+
+      <form class="login-form" (submit)="$event.preventDefault();">
+        <!-- Phone Details Section (shown initially) -->
+        <div *ngIf="!otpSent" class="form-section">
+          <label class="field-block" for="full-name">
+            <span>Full Name</span>
+            <input
+              id="full-name"
+              type="text"
+              placeholder="John Doe"
+              [(ngModel)]="name"
+              name="name"
+              [disabled]="isLoading" />
+          </label>
+
+          <label class="field-block" for="email">
+            <span>Email Address</span>
+            <input
+              id="email"
+              type="email"
+              placeholder="john@example.com"
+              [(ngModel)]="email"
+              name="email"
+              [disabled]="isLoading" />
+          </label>
+
+          <label class="field-block" for="phone-number">
+            <span>Phone Number</span>
+            <input
+              id="phone-number"
+              type="tel"
+              placeholder="+91 00000000000"
+              [(ngModel)]="phoneNumber"
+              name="phoneNumber"
+              [disabled]="isLoading" />
+          </label>
+
+          <ion-button
+            expand="block"
+            class="send-otp-btn"
+            type="button"
+            (click)="sendOtp()"
+            [disabled]="!phoneNumber || !email || !name || isLoading">
+            <span *ngIf="isLoading">Sending...</span>
+            <span *ngIf="!isLoading">Send OTP</span>
+          </ion-button>
+        </div>
+
+        <!-- OTP Verification Section (shown after OTP is sent) -->
+        <div *ngIf="otpSent && !otpVerified" class="form-section">
+          <div class="otp-resend">
+            <span>One-Time Password</span>
+            <button type="button" class="resend-btn" (click)="sendOtp()" [disabled]="isLoading">
+              Resend OTP
+            </button>
+          </div>
+
+          <p class="otp-description">Enter the OTP sent to your email</p>
+
+          <label class="field-block" for="otp-code">
+            <span>OTP</span>
+            <input
+              id="otp-code"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              placeholder="Enter 6-digit OTP"
+              [(ngModel)]="otpCode"
+              name="otpCode"
+              [disabled]="isLoading" />
+          </label>
+
+          <ion-button
+            expand="block"
+            class="verify-otp-btn"
+            type="button"
+            (click)="verifyOtp()"
+            [disabled]="otpCode.trim().length !== 6 || isLoading">
+            <span *ngIf="isLoading">Verifying...</span>
+            <span *ngIf="!isLoading">Verify OTP</span>
+          </ion-button>
+
+          <button type="button" class="back-to-phone-btn" (click)="otpSent = false" [disabled]="isLoading">
+            ← Back to Phone
+          </button>
+        </div>
+
+        <!-- Kitchen Entry (shown after OTP verified) -->
+        <div *ngIf="otpVerified" class="form-section success-section">
+          <div class="verified-badge">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="22" fill="#e6f5e6" stroke="#15803d" stroke-width="2" />
+              <path d="M18 24L22 28L30 20" stroke="#15803d" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <p>Verified!</p>
+          </div>
+
+          <ion-button expand="block" class="enter-btn" type="button" (click)="enterKitchen()">
+            Login
+          </ion-button>
+        </div>
+      </form>
+
+      <a class="back-link" (click)="goBack()">Back to Menu</a>
+
+      <p class="policy-copy">
+        By signing in, you agree to our
+        <a href="#">Terms of Service</a>
+        and
+        <a href="#">Privacy Policy</a>
+      </p>
+    </section>
+
+    <article class="special-card" aria-label="Special dish card">
+      <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80" alt="Woodfire pizza" />
+      <div>
+        <strong>SnackPack Signature</strong>
+        <p>Stone-fired Margherita</p>
+      </div>
+    </article>
+  </main>
+</ion-content>

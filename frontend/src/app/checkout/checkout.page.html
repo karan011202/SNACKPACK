@@ -1,0 +1,287 @@
+<ion-content [fullscreen]="true" class="checkout-content">
+  <!-- Confirmation Page -->
+  <div *ngIf="isOrderPlaced" class="confirmation-shell">
+    <div class="confirmation-container">
+      <!-- Success Icon -->
+      <div class="success-icon">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" fill="#f5ede4" stroke="#c1440a" stroke-width="2"/>
+          <path d="M20 32L28 40L44 24" stroke="#c1440a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Thank You Message -->
+      <h1 class="thank-you-heading">Thank you for your order!</h1>
+      
+      <!-- Order Number -->
+      <p class="order-number">#{{ orderNumber }}</p>
+      
+      <!-- Table Badge -->
+      <div class="table-badge">{{ tableNumber }}</div>
+
+      <!-- Status Timeline -->
+      <div class="status-timeline">
+        <div class="timeline-item active">
+          <div class="timeline-dot">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#c1440a"/>
+            </svg>
+          </div>
+          <span class="timeline-label">Order Received</span>
+        </div>
+        
+        <div class="timeline-connector"></div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8" stroke="#999" stroke-width="2"/>
+              <path d="M12 6v6l4 2" stroke="#999" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="timeline-label">In the Oven</span>
+        </div>
+        
+        <div class="timeline-connector"></div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="#999"/>
+            </svg>
+          </div>
+          <span class="timeline-label">Coming to Table</span>
+        </div>
+      </div>
+
+      <!-- Estimated Time -->
+      <div class="estimated-time">
+        <p class="time-label">ESTIMATED TABLE SERVING TIME</p>
+        <p class="time-value">{{ estimatedTime }}</p>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="confirmation-summary">
+        <h2>Order Summary</h2>
+        <div class="summary-items">
+          <div class="summary-item" *ngFor="let item of cart">
+            <div class="item-details">
+              <div class="item-name-price">
+                <h3>{{ item.name }}</h3>
+                <span class="item-price">{{ formatPrice(item.unitPrice * item.quantity) }}</span>
+              </div>
+              <p class="item-variant">{{ item.selectedVariant }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="summary-divider"></div>
+
+        <div class="confirmation-total" *ngIf="redeemedPoints > 0" style="margin-bottom: 10px;">
+          <span>Loyalty redeemed</span>
+          <strong>-{{ formatPrice(redeemedPoints) }}</strong>
+        </div>
+
+        <!-- Total -->
+        <div class="confirmation-total">
+          <span>Total</span>
+          <strong>{{ formatPrice(payableTotal) }}</strong>
+        </div>
+
+        <p class="dine-in-note">DINE-IN ORDER</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="confirmation-actions">
+        <ion-button expand="block" fill="outline" class="return-button" (click)="goBackToMenu()">
+           Return to Menu
+        </ion-button>
+        <ion-button expand="block" class="call-server-button" (click)="openOrderStatus()">
+          Track Order Status
+        </ion-button>
+      </div>
+
+      <p class="loyalty-earned" *ngIf="checkoutMode === 'login'">
+        +{{ pointsEarnedOnLastOrder }} points credited to your wallet for Order #{{ orderNumber }}
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="confirmation-footer">
+      <p>SNACKPACK WOODFIRE PIZZA</p>
+    </footer>
+  </div>
+
+  <!-- Checkout Form (shown when not ordered) -->
+  <div *ngIf="!isOrderPlaced" class="checkout-shell">
+    <header class="checkout-header">
+      <div>
+        <p class="eyebrow">Secure checkout</p>
+        <h1>Complete your order</h1>
+        <p class="subtitle">Review your items, enter delivery details, and place your order in one step.</p>
+      </div>
+
+      <ion-button fill="clear" class="back-button" (click)="goBackToMenu()">
+        Back to menu
+      </ion-button>
+    </header>
+
+    <section class="checkout-mode-card">
+      <div>
+        <p class="mode-kicker">How would you like to continue?</p>
+        <h2 *ngIf="checkoutMode !== 'login'">Login or place order as guest</h2>
+        <h2 *ngIf="checkoutMode === 'login'">You are logged in</h2>
+        <p *ngIf="checkoutMode === 'login'" class="logged-in-copy">
+          {{ customerName }} | {{ customerPhone }} | {{ customerEmail }}
+        </p>
+      </div>
+      <div class="mode-actions" *ngIf="checkoutMode !== 'login'">
+        <ion-button fill="outline" class="mode-login-btn" (click)="goToLogin()">
+          Login
+        </ion-button>
+        <ion-button class="mode-guest-btn" [class.active]="checkoutMode === 'guest'" (click)="continueAsGuest()">
+          Continue as Guest
+        </ion-button>
+      </div>
+      <div class="mode-actions" *ngIf="checkoutMode === 'login'">
+        <ion-button fill="outline" class="mode-logout-btn" (click)="logoutCustomer()">
+          Logout
+        </ion-button>
+      </div>
+    </section>
+
+    <section class="checkout-grid">
+      <form class="checkout-form">
+        <div class="form-card">
+          <h2>Contact details</h2>
+          <div class="field-grid">
+            <label>
+              <span>Full name</span>
+              <input type="text" [(ngModel)]="customerName" name="customerName" placeholder=" Customer Name" />
+            </label>
+            <label>
+              <span>Phone number</span>
+              <input type="tel" [(ngModel)]="customerPhone" name="customerPhone" placeholder="+91 90000 00000" />
+            </label>
+            <label>
+              <span>Email address</span>
+              <input type="email" [(ngModel)]="customerEmail" name="customerEmail" placeholder="name@example.com" />
+            </label>
+          </div>
+        </div>
+
+        <!-- <div class="form-card">
+          <h2>Delivery address</h2>
+          <label>
+            <span>Street address</span>
+            <textarea [(ngModel)]="addressLine" name="addressLine" rows="3" placeholder="House number, street, landmark"></textarea>
+          </label>
+          <div class="field-grid compact">
+            <label>
+              <span>City</span>
+              <input type="text" [(ngModel)]="city" name="city" placeholder="Your city" />
+            </label>
+            <label>
+              <span>Special instructions</span>
+              <input type="text" [(ngModel)]="notes" name="notes" placeholder="Gate code, floor, call on arrival" />
+            </label>
+          </div>
+        </div> -->
+
+        <div class="form-card payment-card">
+          <h2>Payment method</h2>
+          <p>ONLINE PAYMENT COMING SOONNNNNNNNN</p>
+        </div>
+      </form>
+
+      <aside class="summary-card">
+        <div class="summary-header">
+          <h2>Your order</h2>
+          <span>{{ cart.length }} items</span>
+        </div>
+
+        <div *ngIf="cart.length > 0; else emptyState" class="summary-items">
+          <article class="summary-item" *ngFor="let item of cart">
+            <div>
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.selectedVariant }}</p>
+              <p *ngIf="getCartItemAddons(item).length > 0">Add-ons: {{ getCartItemAddons(item).join(', ') }}</p>
+              <strong>{{ formatPrice(item.unitPrice) }}</strong>
+            </div>
+            <span class="quantity">x{{ item.quantity }}</span>
+          </article>
+        </div>
+
+        <ng-template #emptyState>
+          <div class="empty-state">
+            <p>Your cart is empty.</p>
+            <ion-button expand="block" (click)="goBackToMenu()">Return to menu</ion-button>
+          </div>
+        </ng-template>
+
+        <section class="loyalty-panel" *ngIf="checkoutMode === 'login'">
+          <h3>Loyalty Wallet</h3>
+          <p class="loyalty-balance">
+            Available: <strong>{{ availableLoyaltyPoints }} pts</strong> ({{ formatPrice(availableLoyaltyPoints) }})
+          </p>
+
+          <div class="loyalty-controls">
+            <input
+              type="number"
+              min="0"
+              [max]="maxRedeemablePoints"
+              [(ngModel)]="redeemPointsInput"
+              name="redeemPointsInput"
+              placeholder="Points to redeem"
+            />
+            <ion-button
+              size="small"
+              class="apply-points-btn"
+              [disabled]="maxRedeemablePoints === 0"
+              (click)="applyLoyaltyPoints()">
+              Apply
+            </ion-button>
+            <ion-button
+              size="small"
+              fill="clear"
+              class="clear-points-btn"
+              [disabled]="redeemedPoints === 0"
+              (click)="clearLoyaltyPoints()">
+              Clear
+            </ion-button>
+          </div>
+
+          <p class="loyalty-note">You will earn {{ potentialPointsOnThisOrder }} pts (2% of payable amount) on this order.</p>
+        </section>
+
+        <div class="summary-totals">
+          <div>
+            <span>Subtotal</span>
+            <strong>{{ formatPrice(subtotal) }}</strong>
+          </div>
+          <div *ngIf="redeemedPoints > 0" class="discount-row">
+            <span>Loyalty redeemed</span>
+            <strong>-{{ formatPrice(redeemedPoints) }}</strong>
+          </div>
+          <div class="total-row">
+            <span>Total</span>
+            <strong>{{ formatPrice(payableTotal) }}</strong>
+          </div>
+        </div>
+
+        <p class="order-error" *ngIf="orderSubmitError">
+          {{ orderSubmitError }}
+        </p>
+
+        <ion-button
+          expand="block"
+          class="place-order-button"
+          [disabled]="cart.length === 0 || isPlacingOrder"
+          (click)="placeOrder()">
+          {{ isPlacingOrder ? 'SENDING TO KITCHEN...' : (checkoutMode === 'guest' ? 'PLACE ORDER AS GUEST' : 'SEND TO KITCHEN') }}
+        </ion-button>
+      </aside>
+    </section>
+  </div>
+</ion-content>

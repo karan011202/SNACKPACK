@@ -1,0 +1,92 @@
+ion-content.account-content {
+  --background: linear-gradient(180deg, #fbf8f3 0%, #efe7d9 100%);
+}
+
+.account-shell {
+  min-height: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.kicker {
+  margin: 0;
+  color: #9f4a1e;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-header h1 {
+  margin: 4px 0 0;
+  color: #2d231f;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.payment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.payment-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  border: 1px solid #ebdece;
+  background: #fffdf9;
+  padding: 14px;
+  box-shadow: 0 10px 20px rgba(33, 24, 16, 0.07);
+}
+
+.payment-brand {
+  width: 56px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #2f3644, #444f62);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.payment-copy p {
+  margin: 4px 0 0;
+  color: #675a51;
+}
+
+.default-tag {
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #e8f8ee;
+  color: #146534;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .account-shell {
+    padding: 14px;
+  }
+
+  .account-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .payment-card {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+}

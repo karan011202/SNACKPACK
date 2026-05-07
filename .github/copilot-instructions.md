@@ -1,0 +1,13 @@
+- [x] Verify that the copilot-instructions.md file in the .github directory is created. Completed.
+- [x] Clarify Project Requirements. Completed: Angular + Ionic frontend, Node LoopBack backend.
+- [x] Scaffold the Project. Completed: generated frontend and backend projects.
+- [x] Customize the Project. Completed: root scripts, env examples, docs, Windows script fixes.
+- [x] Install Required Extensions. Skipped: no required extensions were specified by setup info.
+- [x] Compile the Project. Completed: frontend and backend builds succeed.
+- [x] Create and Run Task. Completed: VS Code tasks created for frontend and backend.
+- [x] Launch the Project. Completed: launch requested and executed for both.
+- [x] Ensure Documentation is Complete. Completed: README and instructions file updated.
+
+- Work through each checklist item systematically.
+- Keep communication concise and focused.
+- Follow development best practices.

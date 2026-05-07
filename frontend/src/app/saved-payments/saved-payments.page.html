@@ -1,0 +1,22 @@
+<ion-content [fullscreen]="true" class="account-content">
+  <div class="account-shell">
+    <header class="account-header">
+      <div>
+        <p class="kicker">SnackPack Account</p>
+        <h1>Saved Payments</h1>
+      </div>
+      <ion-button fill="outline" (click)="goBack()">Back to Menu</ion-button>
+    </header>
+
+    <section class="payment-list">
+      <article class="payment-card" *ngFor="let method of methods">
+        <div class="payment-brand">{{ method.brand }}</div>
+        <div class="payment-copy">
+          <strong>{{ method.label }}</strong>
+          <p>•••• •••• •••• {{ method.last4 }}</p>
+        </div>
+        <span class="default-tag" *ngIf="method.isDefault">Default</span>
+      </article>
+    </section>
+  </div>
+</ion-content>

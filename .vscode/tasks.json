@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Frontend (Ionic Angular)",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:frontend"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Run Backend (LoopBack)",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:backend"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}

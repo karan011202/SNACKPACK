@@ -1,0 +1,14 @@
+{
+  "name": "snackpack",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SNACKPACK monorepo with Ionic Angular frontend and LoopBack backend",
+  "scripts": {
+    "install:all": "npm --prefix frontend install && npm --prefix backend install",
+    "dev:frontend": "npm --prefix frontend start",
+    "dev:backend": "npm --prefix backend start",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build": "npm run build:frontend && npm run build:backend"
+  }
+}
