@@ -48,9 +48,11 @@ interface CheckoutConfirmationSnapshot {
 
 interface PlaceOrderPayloadItem {
   menuItemId: string;
+  name?: string;
   variantName: string;
   unitPrice: number;
   quantity: number;
+  selectedAddons?: string[];
 }
 
 interface PlaceOrderResponse {
@@ -177,9 +179,11 @@ export class CheckoutPage implements OnInit {
       redeemedPoints: appliedRedeemedPoints,
       items: this.cart.map((item): PlaceOrderPayloadItem => ({
         menuItemId: item.id,
+        name: item.name,
         variantName: item.selectedVariant,
         unitPrice: item.unitPrice,
         quantity: item.quantity,
+        selectedAddons: item.selectedAddons,
       })),
     };
 
@@ -274,6 +278,7 @@ export class CheckoutPage implements OnInit {
         name: item.name,
         variant: item.selectedVariant,
         price: item.unitPrice * item.quantity,
+        selectedAddons: item.selectedAddons,
       })),
       total: totalAmount,
     };
@@ -299,6 +304,32 @@ export class CheckoutPage implements OnInit {
       currency: 'INR',
       maximumFractionDigits: 2,
     }).format(value);
+  }
+
+  // Addon ID to name mapping (must match home.page.ts availableAddons and kitchen.component.ts)
+  private readonly addonNames: Record<string, string> = {
+    'extra-cheese': 'Extra Cheese',
+    'extra-veg-topping': 'Extra Veg Topping',
+    'premium-topping': 'Premium Topping',
+    'paneer': 'Paneer',
+    'multigrain-wheat-base': 'Multigrain Wheat Base',
+  };
+
+  formatAddons(selectedAddons: string[] | undefined): string {
+    if (!selectedAddons || selectedAddons.length === 0) {
+      return '';
+    }
+    // Support both addon IDs and labels since home.page stores labels
+    return selectedAddons
+      .map(addon => {
+        // If it looks like an ID (lowercase with hyphens), try mapping it
+        if (/^[a-z]+-[a-z-]+$/.test(addon)) {
+          return this.addonNames[addon] || addon;
+        }
+        // Otherwise assume it's already a label and return as-is
+        return addon;
+      })
+      .join(', ');
   }
 
   private calculateSubtotal(): number {

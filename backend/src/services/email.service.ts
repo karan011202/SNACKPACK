@@ -23,6 +23,7 @@ export interface OrderConfirmationEmail {
     name: string;
     variant: string;
     price: number;
+    selectedAddons?: string[];
   }>;
   total: number;
 }
@@ -133,17 +134,22 @@ export class EmailService {
   private generateOrderConfirmationHTML(data: OrderConfirmationEmail): string {
     const itemsHTML = data.items
       .map(
-        item => `
+        item => {
+          const addonsText = item.selectedAddons && item.selectedAddons.length > 0
+            ? `<br><span style="color: #a17347; font-size: 0.85em; font-style: italic;">Add-ons: ${item.selectedAddons.join(', ')}</span>`
+            : '';
+          return `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e9d5c0;">
           <strong>${item.name}</strong><br>
-          <span style="color: #8b5a3a; font-size: 0.9em;">${item.variant}</span>
+          <span style="color: #8b5a3a; font-size: 0.9em;">${item.variant}</span>${addonsText}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e9d5c0; text-align: right;">
           ₹${item.price.toFixed(2)}
         </td>
       </tr>
-    `,
+    `;
+        },
       )
       .join('');
 

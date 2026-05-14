@@ -57,6 +57,32 @@ export async function runMigrations(dataSource: SnackpackDataSource): Promise<vo
       `CREATE INDEX IF NOT EXISTS idx_otp_logs_otp_expiry ON public.otp_logs(otp_expiry)`,
     ];
 
+    const ensureOrderItemsItemNameSql = `
+      ALTER TABLE public.order_items
+      ADD COLUMN IF NOT EXISTS item_name VARCHAR(255)
+    `;
+
+    const backfillOrderItemsItemNameSql = `
+      UPDATE public.order_items oi
+      SET item_name = COALESCE(oi.item_name, mi.name)
+      FROM public.menu_items mi
+      WHERE oi.menu_item_id = mi.id
+        AND (oi.item_name IS NULL OR oi.item_name = '')
+    `;
+
+    const ensureOrderItemsVariantNameSql = `
+      ALTER TABLE public.order_items
+      ADD COLUMN IF NOT EXISTS variant_name VARCHAR(255)
+    `;
+
+    const backfillOrderItemsVariantNameSql = `
+      UPDATE public.order_items oi
+      SET variant_name = COALESCE(oi.variant_name, miv.name)
+      FROM public.menu_item_variants miv
+      WHERE oi.menu_item_variant_id = miv.id
+        AND (oi.variant_name IS NULL OR oi.variant_name = '')
+    `;
+
     const executeSql = (sql: string): Promise<void> =>
       new Promise((resolve, reject) => {
         connector.execute(sql, [], {}, (err: unknown) => {
@@ -84,6 +110,14 @@ export async function runMigrations(dataSource: SnackpackDataSource): Promise<vo
       await executeSql(sql);
     }
     console.log('✓ OTP logs table ensured');
+
+    await executeSql(ensureOrderItemsItemNameSql);
+    await executeSql(backfillOrderItemsItemNameSql);
+    console.log('✓ Order item name column ensured');
+
+    await executeSql(ensureOrderItemsVariantNameSql);
+    await executeSql(backfillOrderItemsVariantNameSql);
+    console.log('✓ Order variant name column ensured');
 
     console.log('✓ Database migrations completed successfully');
 

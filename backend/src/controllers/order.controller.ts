@@ -8,15 +8,20 @@ import {
   OrdersRepository,
   OrderItemsRepository,
   MenuItemVariantsRepository,
+  MenuItemsRepository,
   UsersRepository,
 } from '../repositories';
+import {SocketService} from '../services/socket.service';
+import {KitchenService} from '../sockets/kitchen.service';
 
 type OrderRequestItem = {
   variantId?: string;
   menuItemId?: string;
+  name?: string;
   variantName?: string;
   unitPrice?: number;
   quantity: number;
+  selectedAddons?: string[];
 };
 
 const UUID_REGEX =
@@ -33,11 +38,18 @@ export class OrderController {
     @repository(MenuItemVariantsRepository)
     private variantRepo: MenuItemVariantsRepository,
 
+    @repository(MenuItemsRepository)
+    private menuItemsRepo: MenuItemsRepository,
+
     @repository(UsersRepository)
     private usersRepo: UsersRepository,
 
     @inject('datasources.snackpack')
     private dataSource: juggler.DataSource,
+    @inject('services.socket')
+    private socketService: SocketService,
+    @inject('services.kitchen')
+    private kitchenService: KitchenService,
   ) {}
 
   @post('/orders/place')
@@ -65,6 +77,10 @@ export class OrderController {
 
     for (const item of body.items) {
       const variant = await this.resolveVariant(item);
+      const menuItemName =
+        typeof item.name === 'string' && item.name.trim()
+          ? item.name.trim()
+          : await this.resolveMenuItemName(item.menuItemId);
       const variantPrice = Number(variant?.price);
       const fallbackUnitPrice = Number(item.unitPrice);
       const price = Number.isFinite(variantPrice)
@@ -89,8 +105,11 @@ export class OrderController {
       itemsWithPrice.push({
         variantId: variant?.id,
         menuItemId: normalizedMenuItemId,
+        itemName: menuItemName,
+        variantName: variant?.name || undefined,
         quantity: item.quantity,
         price,
+        selectedAddons: item.selectedAddons || [],
       });
     }
 
@@ -118,12 +137,42 @@ export class OrderController {
         orderId: orderId,
         menuItemId: item.menuItemId,
         menuItemVariantId: item.variantId,
+        itemName: item.itemName,
+        variantName: item.variantName,
         quantity: item.quantity,
         price: item.price,
       });
     }
 
     const displayOrderNumber = this.generateDisplayOrderNumber(orderId);
+
+    // Build a lightweight payload for kitchen and customer sockets
+    const socketPayload = {
+      id: orderId,
+      displayOrderNumber,
+      totalAmount: discountedAmount,
+      items: itemsWithPrice,
+      orderType: resolvedOrderType,
+      status: 'in_queue',
+    };
+
+    // Update in-memory kitchen queue and notify kitchen clients
+    try {
+      await this.kitchenService.addOrder(socketPayload);
+    } catch (err) {
+      // don't block order placement on socket errors
+      console.warn('kitchenService.addOrder failed', err);
+    }
+
+    // Emit to kitchen room
+    try {
+      this.socketService.emitToRoom('kitchen', 'new-order', socketPayload);
+      // Also notify the order-specific room so that customer pages can subscribe
+      this.socketService.emitToRoom(`order-${orderId}`, 'new-order', socketPayload);
+    } catch (err) {
+      // swallow socket errors to keep API stable
+      console.warn('socket emit failed', err);
+    }
 
     return {
       success: true,
@@ -281,5 +330,17 @@ export class OrderController {
     }
 
     return null;
+  }
+
+  private async resolveMenuItemName(menuItemId?: string): Promise<string | undefined> {
+    const trimmed = typeof menuItemId === 'string' ? menuItemId.trim() : '';
+    if (!trimmed) return undefined;
+
+    try {
+      const menuItem = await this.menuItemsRepo.findById(trimmed);
+      return menuItem?.name?.trim() || undefined;
+    } catch {
+      return undefined;
+    }
   }
 }

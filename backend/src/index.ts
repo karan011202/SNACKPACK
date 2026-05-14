@@ -49,6 +49,7 @@ export async function main(options: ApplicationConfig = {}) {
   }
 
   await app.start();
+  await app.initializeSocketIo();
 
   const url = app.restServer.url;
   console.log(`Server is running at ${url}`);

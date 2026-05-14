@@ -150,10 +150,17 @@ import {MySequence} from './sequence';
 import { rateLimitMiddleware } from './middleware/rate-limit.middleware';
 import {jwtAuthMiddleware} from './middleware/jwt-auth.middleware';
 import {OrderHistoryController} from './controllers/order-history.controller';
+import {BindingScope, inject, BindingKey} from '@loopback/core';
+import {Server as HttpServer} from 'http';
+import {Server as IOServer} from 'socket.io';
+import {SocketService} from './services/socket.service';
+import {KitchenService} from './sockets/kitchen.service';
 
 export class Lb4Application extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
 ) {
+  private io?: IOServer;
+
   constructor(options: ApplicationConfig = {}) {
     super(options);
  
@@ -210,6 +217,9 @@ this.controller(OrderHistoryController);
     //this.bind('authentication.jwt.secret').to('');
     //this.bind('authentication.jwt.expiresIn').to('7h');
     //this.bind('services.jwt.service').toClass(JWTService);
+    // Socket and kitchen services
+    this.bind('services.socket').toClass(SocketService).inScope(BindingScope.SINGLETON);
+    this.bind('services.kitchen').toClass(KitchenService).inScope(BindingScope.SINGLETON);
     //this.bind('CURRENT_USER').to({
     //  name: "NR",
     //  orgslNO: "CR"
@@ -286,5 +296,36 @@ this.controller(OrderHistoryController);
     };
     // Configure the file upload service with multer options
     this.configure(FILE_UPLOAD_SERVICE).to(multerOptions);
+  }
+
+  async initializeSocketIo(): Promise<void> {
+    if (this.io) return;
+
+    try {
+      const restServerAny: any = this.restServer as any;
+      const server: HttpServer =
+        restServerAny.httpServer?.server ??
+        restServerAny.httpServer ??
+        restServerAny.server ??
+        restServerAny._server;
+      if (!server) {
+        console.warn('Socket.IO initialization skipped: http server not available');
+        return;
+      }
+
+      this.io = new IOServer(server, {
+        cors: {origin: '*', methods: ['GET', 'POST']},
+      });
+
+      const socketService = await this.get<SocketService>('services.socket');
+      socketService.setIo(this.io);
+
+      const kitchen = await this.get<KitchenService>('services.kitchen');
+      await kitchen.init();
+
+      console.log('Socket.IO initialized');
+    } catch (err) {
+      console.warn('Socket.IO initialization failed', err);
+    }
   }
 }

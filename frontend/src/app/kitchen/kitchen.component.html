@@ -1,0 +1,145 @@
+<ion-content [fullscreen]="true" class="kitchen-content">
+<div class="page">
+  <header class="top">
+    <div class="brand-wrap">
+      <div class="brand">SNACKPACK KITCHEN</div>
+      <div class="brand-sub">Realtime preparation board</div>
+    </div>
+    <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+  </header>
+
+  <section class="header-stats">
+    <article class="stat-card primary">
+      <div class="active-count">
+        <ng-container *ngIf="isLoadingHistory && showHistory">
+          <ion-spinner name="crescent" class="small-spinner"></ion-spinner>
+        </ng-container>
+        <ng-container *ngIf="!(isLoadingHistory && showHistory)">
+          <span *ngIf="showHistory">{{ historyOrders.length || 0 }}<span *ngIf="historyTotal">/{{ historyTotal }}</span></span>
+          <span *ngIf="!showHistory">{{ orders.length || 0 }}</span>
+        </ng-container>
+      </div>
+      <div class="workflow">{{ showHistory ? 'HISTORY RECORDS' : 'CURRENT ORDERS' }}</div>
+    </article>
+  </section>
+
+  <ng-container *ngIf="!showHistory">
+    <section class="empty-state" *ngIf="orders.length === 0">
+      <h3>No active orders</h3>
+      <p>New orders will appear here instantly when customers place them.</p>
+    </section>
+
+    <div *ngFor="let o of orders" class="order-card">
+    <div class="order-top">
+      <div>
+        <div class="order-meta">Order {{o.displayOrderNumber || o.id}} <span class="order-id">· ID: {{o.id}}</span></div>
+        <div class="order-title">
+          <ng-container *ngIf="o.orderType === 'dine_in'">
+            {{ formatTableNumber(o) }}
+            <span *ngIf="o.customerName">— {{o.customerName}}</span>
+          </ng-container>
+          <ng-container *ngIf="o.orderType !== 'dine_in'">
+            {{ (o.orderType || 'Order') | titlecase }}
+            <span *ngIf="o.customerName">— {{o.customerName}}</span>
+          </ng-container>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="time-pill">{{o.elapsed || ''}}</div>
+        <div class="status-chip" [ngClass]="(o.status || '').toLowerCase()">{{o.status}}</div>
+      </div>
+    </div>
+
+    <div class="items">
+      <div *ngFor="let it of (o.items || [])" class="item">
+        <div class="item-left">
+          <div class="item-qty">{{it.quantity}}×</div>
+          <div class="item-meta">
+            <div class="item-name">
+              {{ formatItemName(it) }}
+              <span *ngIf="it.variantName">({{it.variantName}})</span>
+            </div>
+            <div class="item-mods" *ngIf="it.modifiers || it.notes || it.variantName">{{it.modifiers || it.notes || it.variantName}}</div>
+            <div class="item-addons" *ngIf="formatAddons(it.selectedAddons)">
+              <strong style="font-size: 0.9em;">Add-ons:</strong> {{formatAddons(it.selectedAddons)}}
+            </div>
+          </div>
+        </div>
+        <div class="item-price" aria-hidden="true">{{ formatPrice(it.unitPrice ?? it.price ?? 0) }}</div>
+      </div>
+    </div>
+
+    <div class="card-actions">
+      <button class="btn-ghost" (click)="setPreparing(o)">Preparing</button>
+      <button class="btn-primary" (click)="setReady(o)">Ready</button>
+    </div>
+    </div>
+  </ng-container>
+
+  <section *ngIf="showHistory" class="history-section">
+    <div class="history-header">
+      <h2 class="history-title">Order History</h2>
+      <button class="btn-ghost" (click)="loadHistoryOrders(true)" [disabled]="isLoadingHistory">Refresh</button>
+    </div>
+    <div *ngIf="isLoadingHistory">Loading history…</div>
+    <section class="empty-state" *ngIf="!isLoadingHistory && historyOrders.length === 0">
+      <h3>No history found</h3>
+      <p>Completed kitchen tickets will appear once orders are marked ready or delivered.</p>
+    </section>
+    <div *ngFor="let ho of historyOrders" class="order-card">
+      <div class="order-top">
+        <div>
+          <div class="order-meta">Order {{ho.displayOrderNumber || ho.id}} <span class="order-id">· {{ho.status}}</span></div>
+          <div class="order-title">{{ formatTableNumber(ho) }} <span *ngIf="ho.customerName">— {{ho.customerName}}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div class="time-pill">{{ ho.createdAt | date:'short' }}</div>
+          <div class="status-chip" [ngClass]="(ho.status || '').toLowerCase()">{{ ho.status }}</div>
+        </div>
+      </div>
+      <div class="items">
+        <div *ngFor="let it of (ho.items || [])" class="item">
+          <div class="item-left">
+            <div class="item-qty">{{it.quantity}}×</div>
+            <div class="item-meta">
+              <div class="item-name">{{ formatItemName(it) }} <span *ngIf="it.variantName">({{it.variantName}})</span></div>
+              <div class="item-addons" *ngIf="formatAddons(it.selectedAddons)"><strong>Add-ons:</strong> {{ formatAddons(it.selectedAddons) }}</div>
+            </div>
+          </div>
+          <div class="item-price">{{ formatPrice(it.price ?? it.unitPrice ?? 0) }}</div>
+        </div>
+      </div>
+      <div class="order-bill">
+        <div class="bill-row">
+          <span class="bill-label">Bill Total:</span>
+          <span class="bill-amount">{{ formatPrice(ho.totalAmount ?? 0) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="load-more-wrap" *ngIf="hasMoreHistory">
+      <button class="btn-ghost" (click)="loadMoreHistory()" [disabled]="isLoadingHistory">Load more</button>
+    </div>
+  </section>
+</div>
+</ion-content>
+
+<div class="footer-tabs">
+  <div class="tabs-inner">
+    <button type="button" class="tab-btn" [class.active]="!showHistory" aria-label="Orders" title="Orders" (click)="openOrders()">
+      <ion-icon name="restaurant-outline"></ion-icon>
+      <span style="margin-left:8px">Orders</span>
+    </button>
+    <button type="button" class="tab-btn" [class.active]="showHistory" aria-label="History" title="History" (click)="openHistory()">
+      <ion-icon name="time-outline"></ion-icon>
+      <span style="margin-left:8px">History</span>
+    </button>
+    <!-- <button type="button" class="tab-btn" aria-label="Inventory" title="Inventory">
+      <ion-icon name="cube-outline"></ion-icon>
+      <span style="margin-left:8px">Inventory</span>
+    </button> -->
+    <!-- <button type="button" class="tab-btn" aria-label="Staff" title="Staff">
+      <ion-icon name="people-outline"></ion-icon>
+      <span style="margin-left:8px">Staff</span>
+    </button> -->
+  </div>
+</div>

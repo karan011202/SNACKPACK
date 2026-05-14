@@ -31,6 +31,14 @@ export class OrderItems extends Entity {
   menuItemId?: string;
 
   @property({
+    type: 'string',
+    jsonSchema: {nullable: true},
+    generated: false,
+    postgresql: {columnName: 'item_name', dataType: 'character varying', dataLength: null, dataPrecision: null, dataScale: null, nullable: 'YES', generated: false},
+  })
+  itemName?: string;
+
+  @property({
     type: 'number',
     jsonSchema: {nullable: true},
     scale: 0,
@@ -131,6 +139,14 @@ export class OrderItems extends Entity {
     postgresql: {columnName: 'menu_item_variant_id', dataType: 'uuid', dataLength: null, dataPrecision: null, dataScale: null, nullable: 'YES', generated: false},
   })
   menuItemVariantId?: string;
+
+  @property({
+    type: 'string',
+    jsonSchema: {nullable: true},
+    generated: false,
+    postgresql: {columnName: 'variant_name', dataType: 'character varying', dataLength: null, dataPrecision: null, dataScale: null, nullable: 'YES', generated: false},
+  })
+  variantName?: string;
 
   // Define well-known properties here
 

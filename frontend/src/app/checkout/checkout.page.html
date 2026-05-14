@@ -71,6 +71,9 @@
                 <span class="item-price">{{ formatPrice(item.unitPrice * item.quantity) }}</span>
               </div>
               <p class="item-variant">{{ item.selectedVariant }}</p>
+              <p class="item-addons" *ngIf="formatAddons(item.selectedAddons)">
+                <strong>Add-ons:</strong> {{ formatAddons(item.selectedAddons) }}
+              </p>
             </div>
           </div>
         </div>
@@ -206,7 +209,7 @@
             <div>
               <h3>{{ item.name }}</h3>
               <p>{{ item.selectedVariant }}</p>
-              <p *ngIf="getCartItemAddons(item).length > 0">Add-ons: {{ getCartItemAddons(item).join(', ') }}</p>
+              <p *ngIf="formatAddons(item.selectedAddons)">Add-ons: {{ formatAddons(item.selectedAddons) }}</p>
               <strong>{{ formatPrice(item.unitPrice) }}</strong>
             </div>
             <span class="quantity">x{{ item.quantity }}</span>
