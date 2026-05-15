@@ -4,10 +4,10 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'snackpack',
   connector: 'postgresql',
-  host: 'localhost',
+  host: 'snackpack-database.cfuau40w2blx.ap-south-1.rds.amazonaws.com',
   port: 5432,
   user: 'postgres',
-  password: '1234',
+  password: 'Ka7ee466b2',
   database: 'SNACKPACK'
 };
 
