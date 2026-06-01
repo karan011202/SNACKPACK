@@ -1,5 +1,9 @@
 <ion-content [fullscreen]="true" class="home-content">
-  <div class="page-shell">
+  <div class="page-shell"
+    [class.veg-active]="menuSection === 'veg'"
+    [class.non-veg-active]="menuSection === 'nonVeg'"
+    [class.other-active]="menuSection === 'other'"
+    [class.combos-active]="menuSection === 'combos'">
     <header class="topbar">
       <div class="brand" aria-label="SnackPack Woodfire Pizza brand">
         <img class="brand-logo" src="assets/branding/snackpack-logo.png?v=2" alt="SnackPack Woodfire Pizza logo" />
@@ -8,8 +12,6 @@
 
       <nav class="topnav" aria-label="Main navigation">
         <a class="topnav-link active" routerLink="/home">Menu</a>
-        <a class="topnav-link" href="#">Locations</a>
-        <a class="topnav-link" href="#">About Us</a>
       </nav>
 
       <div class="topbar-actions">
@@ -275,47 +277,12 @@
         </div>
       </main>
 
-      <aside class="summary-panel" *ngIf="isCartOpen">
-        <div class="summary-header">
-          <h3>Order Summary</h3>
-          <span class="summary-count">{{ cart.length }}</span>
-        </div>
-
-        <div class="summary-items">
-          <article class="summary-item" *ngFor="let item of cart">
-            <div class="summary-copy">
-              <h4>{{ item.name }}</h4>
-              <p>Option: {{ item.selectedVariant }}</p>
-              <p *ngIf="item.selectedAddons && item.selectedAddons.length > 0" class="summary-addons">
-                Add-ons: <span *ngFor="let addonId of item.selectedAddons; let last = last">
-                  {{ addonId }}<span *ngIf="!last">, </span>
-                </span>
-              </p>
-              <strong>{{ formatPrice(item.unitPrice) }}</strong>
-            </div>
-
-            <div class="summary-controls">
-              <button type="button" (click)="updateQuantity(item.itemKey, -1)">−</button>
-              <span>{{ item.quantity }}</span>
-              <button type="button" (click)="updateQuantity(item.itemKey, 1)">+</button>
-            </div>
-          </article>
-        </div>
-
-        <div class="summary-totals">
-          <div>
-            <span>Subtotal</span>
-            <strong>{{ formatPrice(getSubtotal()) }}</strong>
-          </div>
-          <div class="total-row">
-            <span>Total</span>
-            <strong>{{ formatPrice(getTotal()) }}</strong>
-          </div>
-        </div>
-        <ion-button expand="block" class="checkout-button" [disabled]="cart.length === 0" (click)="goToCheckout()">
-          Checkout Now
-        </ion-button>
-      </aside>
+      <app-cart-modal *ngIf="isCartOpen"
+        [cart]="cart"
+        (close)="isCartOpen = false"
+        (updateQuantity)="updateQuantity($event.itemKey, $event.delta)"
+        (checkout)="goToCheckout()">
+      </app-cart-modal>
     </section>
   </div>
 </ion-content>

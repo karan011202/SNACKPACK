@@ -1,0 +1,43 @@
+<div class="cart-backdrop" (click)="onClose()"></div>
+
+<div class="cart-modal" role="dialog" aria-modal="true" aria-label="Cart">
+  <button class="cart-close" aria-label="Close cart" (click)="onClose()">✕</button>
+
+  <div class="summary-header">
+    <h3>Order Summary</h3>
+    <span class="summary-count">{{ cart.length }}</span>
+  </div>
+
+  <div class="summary-items">
+    <article class="summary-item" *ngFor="let item of cart">
+      <div class="summary-copy">
+        <h4>{{ item.name }}</h4>
+        <p *ngIf="item.selectedAddons && item.selectedAddons.length > 0" class="summary-addons">
+          Add-ons: <span *ngFor="let addonId of item.selectedAddons; let last = last">{{ addonId }}<span *ngIf="!last">, </span></span>
+        </p>
+      </div>
+
+      <div class="summary-footer">
+        <div class="quantity-controls">
+          <button type="button" (click)="onUpdate(item.itemKey, -1)" aria-label="Decrease quantity">−</button>
+          <span>{{ item.quantity }}</span>
+          <button type="button" (click)="onUpdate(item.itemKey, 1)" aria-label="Increase quantity">+</button>
+        </div>
+        <strong class="item-price">{{ (item.unitPrice * item.quantity) | currency:'INR' }}</strong>
+      </div>
+    </article>
+  </div>
+
+  <div class="summary-totals">
+    <div class="total-row">
+      <span>Total</span>
+      <strong>{{ getSubtotal() | currency:'INR' }}</strong>
+    </div>
+  </div>
+
+  <div class="modal-actions">
+    <ion-button expand="block" class="checkout-button" [disabled]="cart.length === 0" (click)="onCheckout()">
+      Checkout Now
+    </ion-button>
+  </div>
+</div>

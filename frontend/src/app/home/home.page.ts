@@ -80,7 +80,7 @@ export class HomePage implements OnInit, ViewWillEnter {
   activeOtherCategory = 'All';
   activeComboCategory = 'All';
   menuSection: MenuSection = 'veg';
-  isCartOpen = true;
+  isCartOpen = false;
   selectedSizes: Record<string, PizzaSize> = {};
   selectedOtherOptions: Record<string, string> = {};
   selectedAddons: Record<string, string[]> = {};

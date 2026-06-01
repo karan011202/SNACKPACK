@@ -4,6 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { HomePage } from './home.page';
+import { CartModalComponent } from '../cart-modal/cart-modal.component';
 
 import { HomePageRoutingModule } from './home-routing.module';
 
@@ -14,6 +15,7 @@ import { HomePageRoutingModule } from './home-routing.module';
     FormsModule,
     HttpClientModule,
     IonicModule,
+    CartModalComponent,
     HomePageRoutingModule
   ],
   declarations: [HomePage]
