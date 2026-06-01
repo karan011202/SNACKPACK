@@ -84,16 +84,16 @@ export class CheckoutPage implements OnInit {
   availableLoyaltyPoints = 0;
   pointsEarnedOnLastOrder = 0;
   checkoutMode: 'guest' | 'login' = 'guest';
-  customerName = 'Karan Singh';
-  customerPhone = '7291010638';
-  customerEmail = 'karansingh06949@gmail.com';
+  customerName = '';
+  customerPhone = '';
+  customerEmail = '';
   addressLine = '';
   city = '';
   notes = '';
   
   isOrderPlaced = false;
   orderNumber = '';
-  tableNumber = 'TABLE14';
+  tableNumber = 'ON TABLE';
   estimatedTime = '12-15 minutes';
   isPlacingOrder = false;
   orderSubmitError = '';
