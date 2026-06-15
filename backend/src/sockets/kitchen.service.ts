@@ -21,7 +21,11 @@ export class KitchenService {
       const orders = await this.ordersRepo.find({
         where: {status: {inq: wanted}},
       });
-      orders.forEach(o => this.activeOrders.set(o.id, o));
+      orders.forEach(o => {
+        if (o.id) {
+          this.activeOrders.set(o.id, o);
+        }
+      });
     } catch (err) {
       console.warn('KitchenService.init failed to load orders', err);
     }

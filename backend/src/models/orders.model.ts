@@ -12,7 +12,7 @@ export class Orders extends Entity {
     id: 1,
     postgresql: {columnName: 'id', dataType: 'uuid', dataLength: null, dataPrecision: null, dataScale: null, nullable: 'NO', generated: false},
   })
-  id: string;
+  id?: string;
 
   @property({
     type: 'string',

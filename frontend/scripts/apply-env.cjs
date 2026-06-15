@@ -51,20 +51,36 @@ function escapeForTsString(input) {
   return input.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-function updateEnvironmentFile(filePath, apiBaseUrl) {
+function upsertProperty(source, propertyName, replacement, afterPropertyName) {
+  const propertyRegex = new RegExp(`${propertyName}\\s*:\\s*['"][^'"]*['"]\\s*,?`, 'm');
+
+  if (propertyRegex.test(source)) {
+    return source.replace(propertyRegex, replacement);
+  }
+
+  const afterRegex = new RegExp(`${afterPropertyName}\\s*:\\s*['"][^'"]*['"]\\s*,?`, 'm');
+  return source.replace(afterRegex, (match) => `${match}\n  ${replacement}`);
+}
+
+function updateEnvironmentFile(filePath, apiBaseUrl, razorpayKeyId, razorpayLogoUrl) {
   if (!fs.existsSync(filePath)) {
     return;
   }
 
   const original = fs.readFileSync(filePath, 'utf8');
-  const replacement = `apiBaseUrl: '${escapeForTsString(apiBaseUrl)}',`;
+  const apiReplacement = `apiBaseUrl: '${escapeForTsString(apiBaseUrl)}',`;
+  const razorpayReplacement = `razorpayKeyId: '${escapeForTsString(razorpayKeyId)}',`;
+  const razorpayLogoReplacement = `razorpayLogoUrl: '${escapeForTsString(razorpayLogoUrl)}',`;
 
   let updated;
   if (/apiBaseUrl\s*:\s*['"][^'"]*['"]\s*,?/m.test(original)) {
-    updated = original.replace(/apiBaseUrl\s*:\s*['"][^'"]*['"]\s*,?/m, replacement);
+    updated = original.replace(/apiBaseUrl\s*:\s*['"][^'"]*['"]\s*,?/m, apiReplacement);
   } else {
-    updated = original.replace(/production\s*:\s*(true|false)\s*,?/m, (match) => `${match}\n  ${replacement}`);
+    updated = original.replace(/production\s*:\s*(true|false)\s*,?/m, (match) => `${match}\n  ${apiReplacement}`);
   }
+
+  updated = upsertProperty(updated, 'razorpayKeyId', razorpayReplacement, 'apiBaseUrl');
+  updated = upsertProperty(updated, 'razorpayLogoUrl', razorpayLogoReplacement, 'razorpayKeyId');
 
   if (updated !== original) {
     fs.writeFileSync(filePath, updated, 'utf8');
@@ -75,9 +91,11 @@ function main() {
   const envContent = readEnvFile();
   const env = parseEnv(envContent);
   const apiBaseUrl = env.API_BASE_URL || 'http://localhost:3000';
+  const razorpayKeyId = env.RAZORPAY_KEY_ID || '';
+  const razorpayLogoUrl = env.RAZORPAY_LOGO_URL || '';
 
-  updateEnvironmentFile(envDevFile, apiBaseUrl);
-  updateEnvironmentFile(envProdFile, apiBaseUrl);
+  updateEnvironmentFile(envDevFile, apiBaseUrl, razorpayKeyId, razorpayLogoUrl);
+  updateEnvironmentFile(envProdFile, apiBaseUrl, razorpayKeyId, razorpayLogoUrl);
 
   console.log(`[env-sync] API_BASE_URL applied: ${apiBaseUrl}`);
 }

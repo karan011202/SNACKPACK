@@ -8,3 +8,5 @@ export * from './email.controller';
 
 export * from './auth2.controller';
 export * from './order-history.controller';
+export * from './order.controller';
+export * from './razorpay.controller';

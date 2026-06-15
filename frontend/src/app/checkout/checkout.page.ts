@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -61,11 +61,44 @@ interface PlaceOrderResponse {
   totalAmount: number;
 }
 
+interface RazorpayOrderResponse {
+  success: boolean;
+  keyId: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+}
+
+interface RazorpayCheckoutResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayFailureResponse {
+  error?: {
+    code?: string;
+    description?: string;
+    reason?: string;
+    source?: string;
+    step?: string;
+  };
+}
+
 interface UserSession {
   name: string;
   email: string;
   phone: string;
   loggedInAt?: string;
+}
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+      on: (event: string, callback: (response: unknown) => void) => void;
+    };
+  }
 }
 
 @Component({
@@ -188,6 +221,10 @@ export class CheckoutPage implements OnInit {
     };
 
     try {
+      if (payableTotal > 0) {
+        await this.collectRazorpayPayment(payableTotal);
+      }
+
       const response = await firstValueFrom(
         this.http.post<PlaceOrderResponse>(`${environment.apiBaseUrl}/orders/place`, payload),
       );
@@ -205,9 +242,126 @@ export class CheckoutPage implements OnInit {
       this.sendOrderConfirmationEmail(payableTotal, appliedRedeemedPoints);
     } catch (error) {
       console.error('Failed to place order:', error);
-      this.orderSubmitError = 'We could not place your order. Please try again.';
+      this.orderSubmitError = this.getOrderErrorMessage(error);
     } finally {
       this.isPlacingOrder = false;
+    }
+  }
+
+  private getOrderErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const serverMessage = typeof error.error?.message === 'string'
+        ? error.error.message
+        : '';
+
+      return serverMessage || 'We could not place your order. Please try again.';
+    }
+
+    return error instanceof Error
+      ? error.message
+      : 'We could not place your order. Please try again.';
+  }
+
+  private async collectRazorpayPayment(amount: number): Promise<RazorpayCheckoutResponse> {
+    if (!window.Razorpay) {
+      throw new Error('Payment checkout is still loading. Please try again.');
+    }
+
+    const razorpayOrder = await firstValueFrom(
+      this.http.post<RazorpayOrderResponse>(`${environment.apiBaseUrl}/payments/razorpay/order`, {
+        amount,
+        currency: 'INR',
+        receipt: `snackpack_${Date.now()}`,
+        notes: {
+          customerName: this.customerName.trim(),
+          customerPhone: this.customerPhone.trim(),
+        },
+      }),
+    );
+
+    if (!razorpayOrder?.success || !razorpayOrder.orderId) {
+      throw new Error('Unable to start payment. Please try again.');
+    }
+
+    const paymentResponse = await this.openRazorpayCheckout(razorpayOrder);
+
+    const verification = await firstValueFrom(
+      this.http.post<{success: boolean}>(`${environment.apiBaseUrl}/payments/razorpay/verify`, {
+        ...paymentResponse,
+        amount,
+      }),
+    );
+
+    if (!verification?.success) {
+      throw new Error('Payment verification failed. Please contact support if money was debited.');
+    }
+
+    return paymentResponse;
+  }
+
+  private openRazorpayCheckout(order: RazorpayOrderResponse): Promise<RazorpayCheckoutResponse> {
+    return new Promise((resolve, reject) => {
+      const RazorpayCheckout = window.Razorpay;
+      if (!RazorpayCheckout) {
+        reject(new Error('Payment checkout is still loading. Please try again.'));
+        return;
+      }
+
+      const options: Record<string, unknown> = {
+        key: order.keyId || environment.razorpayKeyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'SNACKPACK',
+        description: 'Food order payment',
+        order_id: order.orderId,
+        prefill: {
+          name: this.customerName.trim(),
+          email: this.customerEmail.trim(),
+          contact: this.customerPhone.trim(),
+        },
+        theme: {
+          color: '#c1440a',
+        },
+        handler: (response: RazorpayCheckoutResponse) => resolve(response),
+        modal: {
+          ondismiss: () => reject(new Error('Payment was cancelled.')),
+        },
+      };
+
+      options['image'] = this.getRazorpayLogoUrl();
+
+      const razorpay = new RazorpayCheckout(options);
+
+      razorpay.on('payment.failed', (response: unknown) => {
+        const failure = response as RazorpayFailureResponse;
+        console.error('Razorpay payment failed:', response);
+        reject(new Error(failure?.error?.description || 'Payment failed. Please try another method.'));
+      });
+
+      razorpay.open();
+    });
+  }
+
+  private getRazorpayLogoUrl(): string {
+    if (this.isPublicHttpsUrl(environment.razorpayLogoUrl)) {
+      return environment.razorpayLogoUrl;
+    }
+
+    // Always pass a public HTTPS image so Razorpay does not fall back to a
+    // dashboard logo that may point at localhost during development.
+    return 'https://dummyimage.com/1x1/ffffff/ffffff.png';
+  }
+
+  private isPublicHttpsUrl(value: string | undefined): value is string {
+    if (!value) {
+      return false;
+    }
+
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1';
+    } catch {
+      return false;
     }
   }
 
